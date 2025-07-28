@@ -1,4 +1,4 @@
-export type TemplateType = 'modern' | 'timeline'
+export type TemplateType = 'modern' | 'timeline' | 'classic';
 
 export interface Skill { name: string; percentage: number }
 export interface Service { title: string; description: string }
