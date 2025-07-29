@@ -9,7 +9,7 @@ export default function PortfolioPage() {
   const { id } = useParams();
   const nav = useNavigate();
   const item = useSelector((st: RootState) =>
-    st.portfolio.portfolios.find((p) => p.id === id)
+    st.portfolio.portfolios.find((p) => p._id === id)
   );
   if (!item) {
     nav("/professionals");

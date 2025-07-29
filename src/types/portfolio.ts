@@ -8,7 +8,7 @@ export interface Blog { title: string; summary: string }
 export interface Socials { linkedin?: string; github?: string; twitter?: string }
 
 export interface Portfolio {
-  id: string
+  _id: string
   template: TemplateType
   hero: {
     name: string

@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { type RootState } from "../store";
-import { addPortfolio } from "../store/portfolioSlice";
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { type RootState, useAppDispatch } from "../store";
+import { createPortfolio, updatePortfolioById, setCurrentPortfolio } from "../store/portfolioSlice";
 import { v4 as uuidv4 } from "uuid";
 import type {
   Portfolio,
@@ -107,19 +107,24 @@ const steps = [
 ];
 
 export default function PortfolioForm() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const nav = useNavigate();
-  const template = useSelector(
-    (st: RootState) => st.portfolio.selectedTemplate
-  );
+  const template = useSelector((st: RootState) => st.portfolio.selectedTemplate);
+  const currentPortfolio = useSelector((st: RootState) => st.portfolio.currentPortfolio);
+  const isEdit = Boolean(currentPortfolio);
   const [current, setCurrent] = useState(0);
 
-  const [form, setForm] = useState<Portfolio>({
-    id: uuidv4(),
-    template: template!,
-    createdAt: new Date().toISOString(),
-    ...initSection,
-  });
+  const [form, setForm] = useState<Portfolio>(
+    currentPortfolio
+      ? { ...currentPortfolio, template: currentPortfolio.template || template! }
+      : { _id: uuidv4(), template: template!, createdAt: new Date().toISOString(), ...initSection }
+  );
+
+  useEffect(() => {
+    if (currentPortfolio) {
+      setForm({ ...currentPortfolio, template: currentPortfolio.template || template! });
+    }
+  }, [currentPortfolio, template]);
 
   const handleArr = <T,>(
     field: keyof Portfolio,
@@ -162,9 +167,20 @@ export default function PortfolioForm() {
   const handleContact = (k: string, v: any) =>
     setForm((f) => ({ ...f, contact: { ...f.contact, [k]: v } }));
 
-  function handleSubmit() {
-    dispatch(addPortfolio(form));
-    nav("/professionals");
+  async function handleSubmit() {
+    try {
+      const { _id, createdAt, ...portfolioData } = form;
+      if (isEdit) {
+        await dispatch(updatePortfolioById({ id: _id, portfolio: { ...portfolioData, template: form.template || template! } })).unwrap();
+        dispatch(setCurrentPortfolio(null));
+      } else {
+        await dispatch(createPortfolio({ ...portfolioData, template: form.template || template! })).unwrap();
+      }
+      nav("/professionals");
+    } catch (error) {
+      console.error("Failed to submit portfolio:", error);
+      // Here you could show an error message to the user
+    }
   }
 
   return (
